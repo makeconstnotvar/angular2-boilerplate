@@ -1,20 +1,25 @@
 const gulp = require('gulp'),
     del = require('del'),
+    series = require("gulp-series"),
     inject = require('gulp-inject'),
     sass = require('gulp-sass'),
+    uglify = require('gulp-uglify'),
+    concat = require('gulp-concat'),
+    cssmin = require('gulp-cssmin'),
     typescript = require('gulp-typescript'),
     sourcemaps = require('gulp-sourcemaps'),
-    tscConfig = require('./tsconfig.json');
+    tscConfig = require('./tsconfig-tsc.json');
 
-gulp.task('clean', function () {
-    return del('build/**/*');
+gulp.task('clean:debug', function () {
+    return del('build/debug/**/*');
 });
-gulp.task('compile',  function () {
+
+gulp.task('compile', function () {
     return gulp
         .src('application/**/*.ts')
         .pipe(sourcemaps.init())
         .pipe(typescript(tscConfig.compilerOptions))
-        .pipe(sourcemaps.write('.'))
+        .pipe(sourcemaps.write())
         .pipe(gulp.dest('build'));
 });
 gulp.task('copy:libs', function () {
@@ -37,16 +42,7 @@ gulp.task('copy:libs', function () {
         ], {cwd: "node_modules"})
         .pipe(gulp.dest('build/libs'))
 });
-gulp.task('copy:assets', function () {
-    return gulp.src(['application/**/*.css', 'application/**/*.html', 'systemjs.config.js']/*, { base : './' }*/)
-        .pipe(gulp.dest('build'))
-});
-gulp.task('sass', function () {
-    return gulp.src('application/**/*.scss')
-        .pipe(sass())
-        .pipe(gulp.dest('build'));
-});
-gulp.task('inject',['compile','copy:libs','copy:assets','sass'], function () {
+gulp.task('inject', ['compile', 'copy:libs', 'copy:assets', 'sass'], function () {
     let libs = gulp.src([
         'build/libs/shim.min.js',
         'build/libs/system-polyfills.js',
@@ -69,4 +65,50 @@ gulp.task('inject',['compile','copy:libs','copy:assets','sass'], function () {
         .pipe(gulp.dest('build'));
 });
 
-gulp.task('build', [ 'inject']);
+
+gulp.task('precompile:copy', ['release:clean'], function () {
+    return gulp.src(['application/{components,modules}**/*.{html,ts}', 'application/main.ts'])
+        .pipe(gulp.dest('build/compiled'))
+});
+gulp.task('precompile:sass', ['release:clean'], function () {
+    return gulp.src('application/components/**/*.scss')
+        .pipe(sass())
+        .pipe(gulp.dest('build/compiled/components'));
+});
+
+gulp.task('release:clean', function () {
+    return del([
+        'build/compiled/**/*',
+        'build/converted/**/*',
+        'build/temp/**/*',
+        'build/release/**/*',
+        '!build/compiled/main-release.ts'
+    ]);
+});
+gulp.task('release:precompile', ['precompile:copy', 'precompile:sass']);
+gulp.task('release:js', function () {
+    return gulp.src([
+        "node_modules/zone.js/dist/zone.js",
+        "node_modules/reflect-metadata/Reflect.js",
+        'bundle.js'])
+        .pipe(concat('scripts.js'))
+        .pipe(uglify({mangle: false}))
+        .pipe(gulp.dest('build/release/js'));
+});
+gulp.task('release:css', function () {
+    gulp.src('application/css/**/*.{css,scss}')
+        .pipe(sass())
+        .pipe(concat('styles.css'))
+        .pipe(cssmin())
+        .pipe(gulp.dest('build/release/css'))
+});
+gulp.task('release:inject', function () {
+    let files = gulp.src([
+        'build/release/js/*.js',
+        'build/release/css/*.css'
+    ], {read: false});
+
+    return gulp.src('application/index.html')
+        .pipe(inject(files, {ignorePath: '/build/release/'}))
+        .pipe(gulp.dest('build/release'));
+});
