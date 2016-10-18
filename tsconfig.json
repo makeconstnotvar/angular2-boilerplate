@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "outDir": "buils/debug",
-        "target": "ES5",
-        "module": "system",
+        "target": "es5",
+        "module": "commonjs",
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
