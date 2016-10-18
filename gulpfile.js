@@ -1,4 +1,4 @@
-const gulp = require('gulp'),
+var gulp = require('gulp'),
     del = require('del'),
     series = require("gulp-series"),
     inject = require('gulp-inject'),
@@ -8,21 +8,34 @@ const gulp = require('gulp'),
     cssmin = require('gulp-cssmin'),
     typescript = require('gulp-typescript'),
     sourcemaps = require('gulp-sourcemaps'),
-    tscConfig = require('./tsconfig-tsc.json');
+    configTsc = require('./tsconfig-tsc.json');
+    config = require('./tsconfig.json');
 
-gulp.task('clean:debug', function () {
+gulp.task('debug:clean', function () {
     return del('build/debug/**/*');
 });
-
-gulp.task('compile', function () {
+gulp.task('debug:compile', ['debug:clean'], function () {
     return gulp
         .src('application/**/*.ts')
         .pipe(sourcemaps.init())
-        .pipe(typescript(tscConfig.compilerOptions))
+        .pipe(typescript(config.compilerOptions))
         .pipe(sourcemaps.write())
-        .pipe(gulp.dest('build'));
+        .pipe(gulp.dest('build/debug'));
 });
-gulp.task('copy:libs', function () {
+gulp.task('debug:assets', ['debug:clean'], function () {
+    return gulp
+        .src(['application/**/*.{html,css,js}'])
+        .pipe(gulp.dest('build/debug'))
+});
+gulp.task('debug:sass', ['debug:clean'], function () {
+    return gulp
+        .src(['application/**/*.scss'])
+        .pipe(sourcemaps.init())
+        .pipe(sass())
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest('build/debug'))
+});
+gulp.task('debug:libs', ['debug:clean'], function () {
     return gulp
         .src([
             "core-js/client/shim.min.js",
@@ -40,40 +53,30 @@ gulp.task('copy:libs', function () {
             'systemjs/dist/system-polyfills.js',
             'systemjs/dist/system.src.js',
         ], {cwd: "node_modules"})
-        .pipe(gulp.dest('build/libs'))
+        //.pipe(uglify())
+        .pipe(gulp.dest('build/debug/libs'))
 });
-gulp.task('inject', ['compile', 'copy:libs', 'copy:assets', 'sass'], function () {
+gulp.task('debug:inject', ['debug:compile', 'debug:assets', 'debug:sass', 'debug:libs'], function () {
     let libs = gulp.src([
-        'build/libs/shim.min.js',
-        'build/libs/system-polyfills.js',
-        'build/libs/zone.js',
-        'build/libs/Reflect.js',
-        'build/libs/Rx.js',
-        'build/libs/core.umd.js',
-        'build/libs/common.umd.js',
-        'build/libs/compiler.umd.js',
-        'build/libs/platform-browser.umd.js',
-        'build/libs/platform-browser-dynamic.umd.js',
-
-        'build/libs/system.src.js',
-        'build/systemjs.config.js'
+        'build/debug/libs/shim.min.js',
+        'build/debug/libs/system-polyfills.js',
+        'build/debug/libs/zone.js',
+        'build/debug/libs/Reflect.js',
+        'build/debug/libs/Rx.js',
+        'build/debug/libs/core.umd.js',
+        'build/debug/libs/common.umd.js',
+        'build/debug/libs/compiler.umd.js',
+        'build/debug/libs/platform-browser.umd.js',
+        'build/debug/libs/platform-browser-dynamic.umd.js',
+        'build/debug/libs/system.src.js',
+        'build/debug/system.js',
+        'build/debug/**/*.css'
     ], {read: false});
 
     return gulp
         .src('application/index.html')
-        .pipe(inject(libs, {ignorePath: '/build/'}))
-        .pipe(gulp.dest('build'));
-});
-
-
-gulp.task('precompile:copy', ['release:clean'], function () {
-    return gulp.src(['application/{components,modules}**/*.{html,ts}', 'application/main.ts'])
-        .pipe(gulp.dest('build/compiled'))
-});
-gulp.task('precompile:sass', ['release:clean'], function () {
-    return gulp.src('application/components/**/*.scss')
-        .pipe(sass())
-        .pipe(gulp.dest('build/compiled/components'));
+        .pipe(inject(libs, {ignorePath: 'build/debug'}))
+        .pipe(gulp.dest('build/debug'));
 });
 
 gulp.task('release:clean', function () {
@@ -85,7 +88,16 @@ gulp.task('release:clean', function () {
         '!build/compiled/main-release.ts'
     ]);
 });
-gulp.task('release:precompile', ['precompile:copy', 'precompile:sass']);
+gulp.task('release:assets', ['release:clean'], function () {
+    return gulp.src(['application/{components,modules}**/*.{html,ts}', 'application/main.ts'])
+        .pipe(gulp.dest('build/compiled'))
+});
+gulp.task('release:sass', ['release:clean'], function () {
+    return gulp.src('application/components/**/*.scss')
+        .pipe(sass())
+        .pipe(gulp.dest('build/compiled/components'));
+});
+gulp.task('release:precompile', ['release:assets', 'release:sass']);
 gulp.task('release:js', function () {
     return gulp.src([
         "node_modules/zone.js/dist/zone.js",
