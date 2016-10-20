@@ -53,7 +53,7 @@ gulp.task('debug:libs', ['debug:clean'], function () {
             'systemjs/dist/system-polyfills.js',
             'systemjs/dist/system.src.js',
         ], {cwd: "node_modules"})
-        //.pipe(uglify())
+        .pipe(uglify())
         .pipe(gulp.dest('build/debug/libs'))
 });
 gulp.task('debug:inject', ['debug:compile', 'debug:assets', 'debug:sass', 'debug:libs'], function () {
@@ -88,34 +88,40 @@ gulp.task('release:clean', function () {
         '!build/compiled/main-release.ts'
     ]);
 });
-gulp.task('release:assets', ['release:clean'], function () {
+gulp.task('release:assets',  function () {
     return gulp.src(['application/{components,modules}**/*.{html,ts}', 'application/main.ts'])
         .pipe(gulp.dest('build/compiled'))
 });
-gulp.task('release:sass', ['release:clean'], function () {
+gulp.task('release:sass',  function () {
     return gulp.src('application/components/**/*.scss')
         .pipe(sass())
         .pipe(gulp.dest('build/compiled/components'));
 });
 gulp.task('release:precompile', ['release:assets', 'release:sass']);
+
 gulp.task('release:js', function () {
     return gulp.src([
         "node_modules/zone.js/dist/zone.js",
-        "node_modules/reflect-metadata/Reflect.js",
-        'bundle.js'])
-        .pipe(concat('scripts.js'))
-        .pipe(uglify({mangle: false}))
+        "node_modules/reflect-metadata/Reflect.js"])
+        .pipe(uglify())
+        .pipe(gulp.dest('build/release/js'));
+});
+gulp.task('release:move', function () {
+    return gulp.src("build/release/scripts.js")
         .pipe(gulp.dest('build/release/js'));
 });
 gulp.task('release:css', function () {
-    gulp.src('application/css/**/*.{css,scss}')
+    gulp.src('application/css/**/*.scss')
         .pipe(sass())
         .pipe(concat('styles.css'))
         .pipe(cssmin())
         .pipe(gulp.dest('build/release/css'))
 });
-gulp.task('release:inject', function () {
+gulp.task('release:inject',['release:js','release:move','release:css'], function () {
     let files = gulp.src([
+        'build/release/js/Reflect.js',
+        'build/release/js/zone.js',
+        'build/release/js/scripts.js',
         'build/release/js/*.js',
         'build/release/css/*.css'
     ], {read: false});

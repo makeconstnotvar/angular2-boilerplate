@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-        "outDir": "buils/debug",
-        "target": "es6",
-        "module": "commonjs",
+        "outDir": "build/debug",
+        "target": "es5",
+        "module": "es2015",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "moduleResolution": "node",
@@ -14,5 +14,16 @@
         "typeRoots": [
             "node_modules/@types"
         ]
+    },
+    "files":[
+        "application/main.ts",
+        "./typings/index.d.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
+    "angularCompilerOptions": {
+
+        "skipMetadataEmit": true
     }
 }

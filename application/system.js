@@ -22,6 +22,14 @@
             rxjs: {
                 defaultExtension: 'js'
             }
+        },
+        meta: {
+            '*.html': {
+                loader: 'text'
+            },
+            '*.css': {
+                loader: 'text'
+            }
         }
     });
     System.import('app').then(null, console.error.bind(console));
