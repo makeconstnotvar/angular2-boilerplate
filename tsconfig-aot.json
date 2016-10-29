@@ -13,7 +13,6 @@
         "types": []
     },
     "files": [
-
         "build/compiled/main.ts",
         "./typings/index.d.ts"
     ],

@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {Test} from  '../components/test'
+import {Test} from  '../components/test/test'
 import {BrowserModule} from '@angular/platform-browser';
 
 @NgModule({

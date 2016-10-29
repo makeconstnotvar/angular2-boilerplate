@@ -14,20 +14,17 @@ var gulp = require('gulp'),
 gulp.task('debug:clean', function () {
     return del('build/debug/**/*');
 });
-gulp.task('debug:compile', ['debug:clean'], function () {
+gulp.task('debug:html',  function () {
     return gulp
-        .src('application/**/*.ts')
-        .pipe(sourcemaps.init())
-        .pipe(typescript(config.compilerOptions))
-        .pipe(sourcemaps.write())
-        .pipe(gulp.dest('build/debug'));
+        .src(['application/**/*.html'])
+        .pipe(gulp.dest('build/debug/app'))
 });
-gulp.task('debug:assets', ['debug:clean'], function () {
+gulp.task('debug:js',  function () {
     return gulp
-        .src(['application/**/*.{html,css,js}'])
+        .src(['application/**/*.js'])
         .pipe(gulp.dest('build/debug'))
 });
-gulp.task('debug:sass', ['debug:clean'], function () {
+gulp.task('debug:sass',  function () {
     return gulp
         .src(['application/**/*.scss'])
         .pipe(sourcemaps.init())
@@ -35,7 +32,7 @@ gulp.task('debug:sass', ['debug:clean'], function () {
         .pipe(sourcemaps.write())
         .pipe(gulp.dest('build/debug'))
 });
-gulp.task('debug:libs', ['debug:clean'], function () {
+gulp.task('debug:libs',  function () {
     return gulp
         .src([
             "core-js/client/shim.min.js",
@@ -56,7 +53,7 @@ gulp.task('debug:libs', ['debug:clean'], function () {
         .pipe(uglify())
         .pipe(gulp.dest('build/debug/libs'))
 });
-gulp.task('debug:inject', ['debug:compile', 'debug:assets', 'debug:sass', 'debug:libs'], function () {
+gulp.task('debug:inject', ['debug:html','debug:js', 'debug:sass', 'debug:libs'], function () {
     let libs = gulp.src([
         'build/debug/libs/shim.min.js',
         'build/debug/libs/system-polyfills.js',
@@ -69,7 +66,7 @@ gulp.task('debug:inject', ['debug:compile', 'debug:assets', 'debug:sass', 'debug
         'build/debug/libs/platform-browser.umd.js',
         'build/debug/libs/platform-browser-dynamic.umd.js',
         'build/debug/libs/system.src.js',
-        'build/debug/system.js',
+        'build/debug/system.config.js',
         'build/debug/**/*.css'
     ], {read: false});
 
@@ -89,7 +86,7 @@ gulp.task('release:clean', function () {
     ]);
 });
 gulp.task('release:assets',  function () {
-    return gulp.src(['application/{components,modules}**/*.{html,ts}', 'application/main.ts'])
+    return gulp.src(['application/{components,modules}/**/*.{html,ts}', 'application/main.ts'])
         .pipe(gulp.dest('build/compiled'))
 });
 gulp.task('release:sass',  function () {
@@ -97,7 +94,7 @@ gulp.task('release:sass',  function () {
         .pipe(sass())
         .pipe(gulp.dest('build/compiled/components'));
 });
-gulp.task('release:precompile', ['release:assets', 'release:sass']);
+gulp.task('release:precompile', ['release:assets']);
 
 gulp.task('release:js', function () {
     return gulp.src([
