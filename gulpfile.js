@@ -8,23 +8,33 @@ var gulp = require('gulp'),
     cssmin = require('gulp-cssmin'),
     typescript = require('gulp-typescript'),
     sourcemaps = require('gulp-sourcemaps'),
-    configTsc = require('./tsconfig-tsc.json');
-    config = require('./tsconfig.json');
+    configTsc = require('./tsconfig-debug.json');
+config = require('./tsconfig.json');
 
 gulp.task('debug:clean', function () {
     return del('build/debug/**/*');
 });
-gulp.task('debug:html',  function () {
+gulp.task('debug:html', function () {
     return gulp
         .src(['application/**/*.html'])
         .pipe(gulp.dest('build/debug/app'))
 });
-gulp.task('debug:js',  function () {
+gulp.task('debug:ts', function () {
+    return gulp.src(["application/**/*.ts",
+        "!application/polyfills.ts",
+        "!application/vendors.ts",
+        "./typings/index.d.ts"])
+        .pipe(sourcemaps.init())
+        .pipe(typescript(configTsc.compilerOptions))
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest('build/debug/app'))
+});
+gulp.task('debug:js', function () {
     return gulp
         .src(['application/**/*.js'])
         .pipe(gulp.dest('build/debug'))
 });
-gulp.task('debug:sass',  function () {
+gulp.task('debug:sass', function () {
     return gulp
         .src(['application/**/*.scss'])
         .pipe(sourcemaps.init())
@@ -32,7 +42,7 @@ gulp.task('debug:sass',  function () {
         .pipe(sourcemaps.write())
         .pipe(gulp.dest('build/debug'))
 });
-gulp.task('debug:libs',  function () {
+gulp.task('debug:libs', function () {
     return gulp
         .src([
             "core-js/client/shim.min.js",
@@ -53,7 +63,7 @@ gulp.task('debug:libs',  function () {
         .pipe(uglify())
         .pipe(gulp.dest('build/debug/libs'))
 });
-gulp.task('debug:inject', ['debug:html','debug:js', 'debug:sass', 'debug:libs'], function () {
+gulp.task('debug:inject', ['debug:html', 'debug:js', 'debug:sass', 'debug:libs'], function () {
     let libs = gulp.src([
         'build/debug/libs/shim.min.js',
         'build/debug/libs/system-polyfills.js',
@@ -85,11 +95,11 @@ gulp.task('release:clean', function () {
         '!build/compiled/main-release.ts'
     ]);
 });
-gulp.task('release:assets',  function () {
+gulp.task('release:assets', function () {
     return gulp.src(['application/{components,modules}/**/*.{html,ts}', 'application/main.ts'])
         .pipe(gulp.dest('build/compiled'))
 });
-gulp.task('release:sass',  function () {
+gulp.task('release:sass', function () {
     return gulp.src('application/components/**/*.scss')
         .pipe(sass())
         .pipe(gulp.dest('build/compiled/components'));
@@ -114,7 +124,7 @@ gulp.task('release:css', function () {
         .pipe(cssmin())
         .pipe(gulp.dest('build/release/css'))
 });
-gulp.task('release:inject',['release:js','release:move','release:css'], function () {
+gulp.task('release:inject', ['release:js', 'release:move', 'release:css'], function () {
     let files = gulp.src([
         'build/release/js/Reflect.js',
         'build/release/js/zone.js',
