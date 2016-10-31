@@ -1,6 +1,6 @@
 var gulp = require('gulp'),
     del = require('del'),
-    series = require("gulp-series"),
+    series = require('gulp-series'),
     inject = require('gulp-inject'),
     sass = require('gulp-sass'),
     uglify = require('gulp-uglify'),
@@ -8,30 +8,23 @@ var gulp = require('gulp'),
     cssmin = require('gulp-cssmin'),
     typescript = require('gulp-typescript'),
     sourcemaps = require('gulp-sourcemaps'),
+    rename = require('gulp-rename'),
+    gif = require('gulp-if'),
     configTsc = require('./tsconfig-debug.json');
-config = require('./tsconfig.json');
+//config = require('./tsconfig.json');
 
 gulp.task('debug:clean', function () {
     return del('build/debug/**/*');
 });
 gulp.task('debug:html', function () {
     return gulp
-        .src(['application/**/*.html'])
+        .src(['application/**/*.html',
+        '!application/index.html'])
         .pipe(gulp.dest('build/debug/app'))
 });
-gulp.task('debug:ts', function () {
-    return gulp.src(["application/**/*.ts",
-        "!application/polyfills.ts",
-        "!application/vendors.ts",
-        "./typings/index.d.ts"])
-        .pipe(sourcemaps.init())
-        .pipe(typescript(configTsc.compilerOptions))
-        .pipe(sourcemaps.write())
-        .pipe(gulp.dest('build/debug/app'))
-});
-gulp.task('debug:js', function () {
+gulp.task('debug:move', function () {
     return gulp
-        .src(['application/**/*.js'])
+        .src(['application/system.config.js'])
         .pipe(gulp.dest('build/debug'))
 });
 gulp.task('debug:sass', function () {
@@ -45,25 +38,25 @@ gulp.task('debug:sass', function () {
 gulp.task('debug:libs', function () {
     return gulp
         .src([
-            "core-js/client/shim.min.js",
-            "zone.js/dist/zone.js",
-            "reflect-metadata/Reflect.js",
-            "rxjs/bundles/Rx.js",
-            "@angular/forms/bundles/forms.umd.js",
-            "@angular/http/bundles/http.umd.js",
-            "@angular/router/bundles/router.umd.js",
-            "@angular/core/bundles/core.umd.js",
-            "@angular/common/bundles/common.umd.js",
-            "@angular/compiler/bundles/compiler.umd.js",
-            "@angular/platform-browser/bundles/platform-browser.umd.js",
-            "@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js",
+            'core-js/client/shim.min.js',
+            'zone.js/dist/zone.js',
+            'reflect-metadata/Reflect.js',
+            'rxjs/bundles/Rx.js',
+            '@angular/forms/bundles/forms.umd.js',
+            '@angular/http/bundles/http.umd.js',
+            '@angular/router/bundles/router.umd.js',
+            '@angular/core/bundles/core.umd.js',
+            '@angular/common/bundles/common.umd.js',
+            '@angular/compiler/bundles/compiler.umd.js',
+            '@angular/platform-browser/bundles/platform-browser.umd.js',
+            '@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.js',
             'systemjs/dist/system-polyfills.js',
             'systemjs/dist/system.src.js',
-        ], {cwd: "node_modules"})
+        ], {cwd: 'node_modules'})
         .pipe(uglify())
         .pipe(gulp.dest('build/debug/libs'))
 });
-gulp.task('debug:inject', ['debug:html', 'debug:js', 'debug:sass', 'debug:libs'], function () {
+gulp.task('debug:inject', ['debug:html', 'debug:move', 'debug:sass', 'debug:libs'], function () {
     let libs = gulp.src([
         'build/debug/libs/shim.min.js',
         'build/debug/libs/system-polyfills.js',
@@ -85,6 +78,16 @@ gulp.task('debug:inject', ['debug:html', 'debug:js', 'debug:sass', 'debug:libs']
         .pipe(inject(libs, {ignorePath: 'build/debug'}))
         .pipe(gulp.dest('build/debug'));
 });
+gulp.task('debug:ts', function () {
+    return gulp.src(['application/**/*.ts',
+        '!application/polyfills.ts',
+        '!application/vendors.ts',
+        './typings/index.d.ts'])
+        .pipe(sourcemaps.init())
+        .pipe(typescript(configTsc.compilerOptions))
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest('build/debug/app'))
+});
 
 gulp.task('release:clean', function () {
     return del([
@@ -95,42 +98,41 @@ gulp.task('release:clean', function () {
         '!build/compiled/main-release.ts'
     ]);
 });
-gulp.task('release:assets', function () {
-    return gulp.src(['application/{components,modules}/**/*.{html,ts}', 'application/main.ts'])
+gulp.task('release:precompile', function () {
+    return gulp.src([
+        'application/{components,modules}/**/*.{html,ts}',
+        'application/main.ts'])
         .pipe(gulp.dest('build/compiled'))
 });
-gulp.task('release:sass', function () {
-    return gulp.src('application/components/**/*.scss')
-        .pipe(sass())
-        .pipe(gulp.dest('build/compiled/components'));
-});
-gulp.task('release:precompile', ['release:assets']);
 
-gulp.task('release:js', function () {
+gulp.task('release:libs', function () {
     return gulp.src([
-        "node_modules/zone.js/dist/zone.js",
-        "node_modules/reflect-metadata/Reflect.js"])
+        'node_modules/zone.js/dist/zone.js',
+        'node_modules/reflect-metadata/Reflect.js'])
+        .pipe(gif('**/Reflect.js', rename({basename: 'reflect'})))
         .pipe(uglify())
         .pipe(gulp.dest('build/release/js'));
 });
 gulp.task('release:move', function () {
-    return gulp.src("build/release/scripts.js")
+    return gulp.src([
+        'build/release/scripts.js',
+        'application/module.js'])
         .pipe(gulp.dest('build/release/js'));
 });
-gulp.task('release:css', function () {
+gulp.task('release:sass', function () {
     gulp.src('application/css/**/*.scss')
         .pipe(sass())
         .pipe(concat('styles.css'))
         .pipe(cssmin())
         .pipe(gulp.dest('build/release/css'))
 });
-gulp.task('release:inject', ['release:js', 'release:move', 'release:css'], function () {
+gulp.task('release:inject', ['release:libs', 'release:move', 'release:sass'], function () {
     let files = gulp.src([
-        'build/release/js/Reflect.js',
+        'build/release/js/module.js',
+        'build/release/js/reflect.js',
         'build/release/js/zone.js',
         'build/release/js/scripts.js',
-        'build/release/js/*.js',
-        'build/release/css/*.css'
+        'build/release/css/styles.css'
     ], {read: false});
 
     return gulp.src('application/index.html')
