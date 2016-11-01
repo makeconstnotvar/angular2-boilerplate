@@ -16,9 +16,5 @@
     },
     "include": [
         "application/main.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "typings/*"
     ]
 }

@@ -9,14 +9,15 @@
         "removeComments": false,
         "noImplicitAny": true,
         "suppressImplicitAnyIndexErrors": false,
-        "outDir": "build/converted"
-
+        "outDir": "build/converted",
+        "types": [
+            "node"
+        ],
+        "typeRoots": [
+            "./node_modules/@types"
+        ]
     },
     "include": [
         "build/compiled/main-release.ts"
-    ],
-    "exclude":[
-        "node_modules/typescript/lib/lib.es6.d.ts",
-        "node_modules/@types/core-js/index.d.ts"
     ]
 }
