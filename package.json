@@ -7,9 +7,14 @@
         "build": "tsc  -p tsconfig-tsc.json",
         "rollup": "rollup  -f iife -c rollup-config.js -o build/temp/bundle.es6.js",
         "es5": "tsc --target es5 --allowJs build/temp/bundle.es6.js --out build/temp/bundle.js",
-        "minify": "uglifyjs build/temp/bundle.js --screw-ie8 --compress --mangle --output build/release/scripts.js",
+        "minify": "uglifyjs build/temp/bundle.js --screw-ie8 --compress --mangle --output build/release/js/scripts.js",
         "release": "gulp release:clean && gulp release:precompile && npm run ngc && npm run build && npm run rollup && npm run es5 && npm run minify && gulp release:inject",
-        "debug": "gulp debug:clean && gulp debug:inject && tsc -p tsconfig-debug.json"
+        "release-start": "static build/release",
+        "debug": "gulp debug:clean && gulp debug:inject && tsc -p tsconfig-debug.json",
+        "debug-tsc": "tsc -p tsconfig-debug.json",
+        "debug-watch": "tsc -w -p tsconfig-debug.json ",
+        "debug-gulp": "gulp debug:inject",
+        "debug-start": "static"
     },
     "dependencies": {
         "@angular/common": "^2.1.0",
@@ -21,8 +26,8 @@
         "@angular/platform-browser-dynamic": "^2.1.0",
         "@angular/router": "^3.1.0",
         "core-js": "^2.4.1",
-        "rxjs": "^5.0.0-beta.12",
-        "rxjs-es": "^5.0.0-beta.12",
+        "rxjs": "5.0.0-beta.12",
+        "rxjs-es": "5.0.0-beta.12",
         "systemjs": "^0.19.39",
         "zone.js": "^0.6.23"
     },

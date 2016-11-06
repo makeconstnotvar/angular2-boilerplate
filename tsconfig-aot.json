@@ -14,7 +14,7 @@
         ]
     },
     "include": [
-        "build/compiled/main.ts"
+        "./build/compiled/main.ts"
     ],
     "angularCompilerOptions": {
         "skipMetadataEmit" : true

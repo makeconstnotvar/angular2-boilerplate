@@ -3,9 +3,9 @@ import {Component} from "@angular/core";
 
 @Component({
     moduleId: module.id,
-    selector: 'application',
-    templateUrl: 'test.html'
+    //selector: 'page2',
+    templateUrl: 'page2.html'
 })
-export class Test {
+export class Page2 {
 
 }
